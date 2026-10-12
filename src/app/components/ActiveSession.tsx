@@ -1,5 +1,6 @@
 import type { Player, Session } from '../../features/queue/queueTypes';
 import { useActiveQueue } from '../../hooks/useActiveQueue';
+import { GameTimerEditor } from './GameTimerEditor';
 
 interface ActiveSessionProps {
   session: Session;
@@ -10,6 +11,9 @@ interface ActiveSessionProps {
 export function ActiveSession({ session, updateSession, clearSession }: ActiveSessionProps) {
   const {
     timerState,
+    isAlarmPlaying,
+    stopAlarm,
+    updateEditableTimer,
     queue,
     playerName,
     setPlayerName,
@@ -25,10 +29,11 @@ export function ActiveSession({ session, updateSession, clearSession }: ActiveSe
     handlePromote,
     handleRemove,
   } = useActiveQueue({ session, updateSession, clearSession });
+  const canEditTimer = session.status === 'setup' || session.status === 'paused';
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 px-4 py-5 pb-8 font-sans text-slate-100 antialiased">
-      <header className="mx-auto mb-[18px] flex max-w-[1200px] flex-col gap-4 min-[700px]:flex-row min-[700px]:items-end min-[700px]:justify-between">
+    <div className="min-h-screen bg-linear-to-b from-slate-900 to-slate-950 px-4 py-5 pb-8 font-sans text-slate-100 antialiased">
+      <header className="mx-auto mb-4.5 flex max-w-300 flex-col gap-4 min-[700px]:flex-row min-[700px]:items-end min-[700px]:justify-between">
         <div>
           <p className="mb-2 text-[0.7rem] uppercase tracking-[0.14em] text-blue-300">{session.sport}</p>
           <h1 className="m-0 text-4xl font-bold sm:text-5xl">{session.name}</h1>
@@ -44,6 +49,12 @@ export function ActiveSession({ session, updateSession, clearSession }: ActiveSe
           </div>
 
           <div className="flex flex-wrap gap-2">
+            {isAlarmPlaying ? (
+              <button type="button" className="rounded-xl bg-red-700 px-3 py-2.5 font-semibold text-white transition-transform hover:-translate-y-px" onClick={stopAlarm}>
+                Stop alarm
+              </button>
+            ) : null}
+
             {session.status === 'active' ? (
               <button type="button" className="rounded-xl bg-slate-800/80 px-3 py-2.5 text-slate-200 transition-transform hover:-translate-y-px" onClick={handlePauseResume}>
                 Pause
@@ -71,7 +82,7 @@ export function ActiveSession({ session, updateSession, clearSession }: ActiveSe
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-[1200px] grid-cols-1 gap-[18px] min-[700px]:grid-cols-3">
+      <main className="mx-auto grid max-w-300 grid-cols-1 gap-4.5 min-[700px]:grid-cols-3">
         <section className="rounded-2xl border border-slate-400/20 bg-slate-900/75 p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="m-0 text-lg font-semibold">Current Game</h2>
@@ -79,7 +90,11 @@ export function ActiveSession({ session, updateSession, clearSession }: ActiveSe
           </div>
 
           <div className="flex flex-col gap-4">
-            <div className="text-center text-4xl font-extrabold text-blue-200 sm:text-5xl">{timerState.formatted}</div>
+            {canEditTimer ? (
+              <GameTimerEditor remainingSeconds={timerState.remainingSeconds} onChange={updateEditableTimer} />
+            ) : (
+              <div className="text-center text-4xl font-extrabold text-blue-200 sm:text-5xl">{timerState.formatted}</div>
+            )}
             <div className="grid grid-cols-1 gap-2.5 min-[431px]:grid-cols-2">
               {queue.current.length === 0 ? (
                 <p className="m-0 text-sm text-slate-300">No current players</p>
@@ -155,7 +170,7 @@ export function ActiveSession({ session, updateSession, clearSession }: ActiveSe
         </section>
       </main>
 
-      <div className="mx-auto mt-[18px] grid max-w-[1200px] grid-cols-1 items-center gap-2.5 min-[431px]:grid-cols-[minmax(0,1fr)_auto_auto]">
+      <div className="mx-auto mt-4.5 grid max-w-300 grid-cols-1 items-center gap-2.5 min-[431px]:grid-cols-[minmax(0,1fr)_auto_auto]">
         <input
           className="min-w-0 rounded-xl border border-slate-400/25 bg-slate-900/80 px-3.5 py-3 text-white outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30"
           value={playerName}
@@ -163,7 +178,7 @@ export function ActiveSession({ session, updateSession, clearSession }: ActiveSe
           placeholder="Add player name"
           aria-label="Add player name"
         />
-        <button type="button" className="rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 px-4 py-3 font-bold text-white transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50" onClick={handleAddPlayer}>
+        <button type="button" className="rounded-xl bg-linear-to-br from-blue-400 to-blue-600 px-4 py-3 font-bold text-white transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50" onClick={handleAddPlayer}>
           + Add Player
         </button>
         <button type="button" className="rounded-xl bg-slate-800/80 px-3 py-2.5 text-slate-200 transition-transform hover:-translate-y-px" onClick={handleStart}>

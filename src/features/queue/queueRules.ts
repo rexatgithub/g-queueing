@@ -88,6 +88,21 @@ export const getTimerSnapshot = (session: Session, now = Date.now()) => {
   };
 };
 
+export const setInactiveTimerRemaining = (session: Session, remainingSeconds: number): Session => {
+  if (session.status !== 'setup' && session.status !== 'paused') {
+    return session;
+  }
+
+  const safeRemainingSeconds = Math.max(0, Math.floor(remainingSeconds));
+
+  return {
+    ...session,
+    timerRemainingSeconds: safeRemainingSeconds,
+    ...(session.status === 'setup' ? { gameDurationSeconds: safeRemainingSeconds } : {}),
+    updatedAt: new Date().toISOString(),
+  };
+};
+
 export const formatDurationDisplay = (value: number) => {
   const safeValue = Math.max(0, Math.floor(value));
   const hours = Math.floor(safeValue / 3600);

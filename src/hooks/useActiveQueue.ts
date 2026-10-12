@@ -10,10 +10,12 @@ import {
   removePlayer,
   renamePlayer,
   resumeSession,
+  setInactiveTimerRemaining,
   startSession,
   undoAdvance,
 } from '../features/queue/queueRules';
 import type { Player, Session } from '../features/queue/queueTypes';
+import { useGameOverAlarm } from './useGameOverAlarm';
 
 interface UseActiveQueueOptions {
   session: Session;
@@ -33,6 +35,18 @@ export function useActiveQueue({ session, updateSession, clearSession }: UseActi
 
   const timerState = useMemo(() => getTimerSnapshot(session, now), [now, session]);
   const queue = useMemo(() => getQueueSections(session), [session]);
+  const { isAlarmPlaying, unlockAudio, stopAlarm } = useGameOverAlarm(
+    session.status === 'active' && timerState.remainingSeconds === 0,
+    timerState.remainingSeconds,
+  );
+
+  const updateEditableTimer = (remainingSeconds: number) => {
+    if (session.status !== 'setup' && session.status !== 'paused') {
+      return;
+    }
+
+    updateSession(setInactiveTimerRemaining(session, remainingSeconds));
+  };
 
   const handleAddPlayer = () => {
     if (!playerName.trim()) {
@@ -45,14 +59,19 @@ export function useActiveQueue({ session, updateSession, clearSession }: UseActi
     setErrorMessage('');
   };
 
-  const handleStart = () => updateSession(startSession(session));
+  const handleStart = () => {
+    unlockAudio();
+    updateSession(startSession(session));
+  };
 
   const handlePauseResume = () => {
     if (session.status === 'setup') {
+      unlockAudio();
       updateSession(startSession(session));
     } else if (session.status === 'active') {
       updateSession(pauseSession(session));
     } else if (session.status === 'paused') {
+      unlockAudio();
       updateSession(resumeSession(session));
     }
   };
@@ -66,6 +85,7 @@ export function useActiveQueue({ session, updateSession, clearSession }: UseActi
   };
 
   const handleReset = () => {
+    stopAlarm();
     clearSession();
     setPlayerName('');
     setErrorMessage('');
@@ -84,6 +104,9 @@ export function useActiveQueue({ session, updateSession, clearSession }: UseActi
 
   return {
     timerState,
+    isAlarmPlaying,
+    stopAlarm,
+    updateEditableTimer,
     queue,
     playerName,
     setPlayerName,
