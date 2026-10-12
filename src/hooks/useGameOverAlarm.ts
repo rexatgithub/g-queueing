@@ -15,7 +15,7 @@ export function useGameOverAlarm(isGameOver: boolean, remainingSeconds: number) 
       return null;
     }
 
-    audioRef.current ??= new Audio('/sounds/game-over-alarm.wav');
+    audioRef.current ??= new Audio(`${import.meta.env.BASE_URL}sounds/game-over-alarm.wav`);
     audioRef.current.preload = 'auto';
     audioRef.current.loop = true;
     audioRef.current.volume = 0.8;
