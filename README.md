@@ -1,4 +1,5 @@
 # G-Queue
+https://rexatgithub.github.io/g-queueing/
 
 G-Queue is a local-first pickup basketball queue manager. It helps an organizer manage a game session, see who is playing next, and keep the waiting line moving. Session data is stored in the browser; no account or backend is required.
 
